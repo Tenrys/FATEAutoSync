@@ -4,7 +4,26 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "Release Build",
+      "type": "shell",
+      "command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current\\Bin\\msbuild.exe",
+      "args": [
+        "/property:GenerateFullPaths=true",
+        "/t:build",
+        "/p:configuration=Release",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Debug Build",
       "type": "shell",
       "command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current\\Bin\\msbuild.exe",
       "args": [
