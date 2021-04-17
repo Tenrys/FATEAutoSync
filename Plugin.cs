@@ -22,8 +22,8 @@ namespace FateAutoSync
     private IntPtr uiModule = IntPtr.Zero;
 
     // Our specific stuff
-    private IntPtr inFatePtr = (IntPtr)0x7FF70E25CC51;
-    private bool inFate = false;
+    private IntPtr inFateAreaPtr = IntPtr.Zero;
+    private bool inFateArea = false;
     private bool firstRun = true;
     private ChatGui chat;
 
@@ -49,11 +49,11 @@ namespace FateAutoSync
     {
       if (!this.config.enabled) return;
 
-      var oldInFate = inFate;
-      inFate = Marshal.ReadByte(inFatePtr) == 1;
-      if (oldInFate != inFate)
+      var wasInFateArea = inFateArea;
+      inFateArea = Marshal.ReadByte(inFateAreaPtr) == 1;
+      if (wasInFateArea != inFateArea)
       {
-        if (inFate)
+        if (inFateArea)
         {
           if (firstRun)
           {
@@ -76,6 +76,20 @@ namespace FateAutoSync
     // Courtesy of https://github.com/UnknownX7/QoLBar
     private unsafe void InitializePointers()
     {
+      // FATE pointer (thanks to Pohky#8008)
+      try
+      {
+        var sig = pluginInterface.TargetModuleScanner.ScanText("80 3D ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 48 8B 42 20");
+        inFateAreaPtr = sig + Marshal.ReadInt32(sig, 2) + 7;
+        chat.Print("Retrieved 'inFateAreaPtr' successfully");
+        chat.Print(inFateAreaPtr.ToString("X8"));
+      }
+      catch
+      {
+        PluginLog.Error("Failed loading 'inFateAreaPtr'");
+      }
+
+      // for ExecuteCommand
       try
       {
         var getUIModulePtr = pluginInterface.TargetModuleScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
@@ -87,7 +101,7 @@ namespace FateAutoSync
         uiModule = GetUIModule(*(IntPtr*)uiModulePtr);
         ProcessChatBox = Marshal.GetDelegateForFunctionPointer<ProcessChatBoxDelegate>(easierProcessChatBoxPtr);
       }
-      catch { PluginLog.Error("Failed loading ExecuteCommand"); }
+      catch { PluginLog.Error("Failed loading 'ExecuteCommand'"); }
     }
 
     public void ExecuteCommand(string command)
