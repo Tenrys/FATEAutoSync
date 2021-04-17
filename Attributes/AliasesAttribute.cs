@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DalamudPluginProjectTemplate.Attributes
+namespace FateAutoSync.Attributes
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class AliasesAttribute : Attribute

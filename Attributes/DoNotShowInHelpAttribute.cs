@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DalamudPluginProjectTemplate
+namespace FateAutoSync
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class DoNotShowInHelpAttribute : Attribute

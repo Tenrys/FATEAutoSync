@@ -1,15 +1,15 @@
 ﻿using ImGuiNET;
 
-namespace DalamudPluginProjectTemplate
+namespace FateAutoSync
 {
-    public class PluginUI
-    {
-        public bool IsVisible { get; set; }
+  public class PluginUI
+  {
+    public bool IsVisible { get; set; }
 
-        public void Draw()
-        {
-            if (!IsVisible)
-                return;
-        }
+    public void Draw()
+    {
+      if (!IsVisible)
+        return;
     }
+  }
 }
