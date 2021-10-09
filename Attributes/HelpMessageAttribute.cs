@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FateAutoSync.Attributes
+namespace FATEAutoSync.Attributes
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class HelpMessageAttribute : Attribute

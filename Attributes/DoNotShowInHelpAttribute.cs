@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FateAutoSync
+namespace FATEAutoSync
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class DoNotShowInHelpAttribute : Attribute

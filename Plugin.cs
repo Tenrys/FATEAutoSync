@@ -1,16 +1,21 @@
 ﻿using System;
 using Dalamud.Plugin;
-using Dalamud.Game.Internal.Gui;
-using FateAutoSync.Attributes;
+using FATEAutoSync.Attributes;
 using System.Runtime.InteropServices;
+using Dalamud.Game;
+using Dalamud.Game.Gui;
+using Dalamud.Logging;
+using Dalamud.Game.Command;
 
-namespace FateAutoSync
+namespace FATEAutoSync
 {
   public class Plugin : IDalamudPlugin
   {
     public string Name => "FATE AutoSync";
 
     private DalamudPluginInterface pluginInterface;
+    private Framework framework;
+    private SigScanner sigScanner;
     private PluginCommandManager<Plugin> commandManager;
     private Configuration config;
     // private PluginUI ui;
@@ -18,7 +23,7 @@ namespace FateAutoSync
     // Command execution
     private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
     private delegate IntPtr GetUIModuleDelegate(IntPtr basePtr);
-    private ProcessChatBoxDelegate ProcessChatBox;
+    private ProcessChatBoxDelegate? ProcessChatBox;
     private IntPtr uiModule = IntPtr.Zero;
 
     // Our specific stuff
@@ -27,25 +32,27 @@ namespace FateAutoSync
     private bool firstRun = true;
     private ChatGui chat;
 
-    public void Initialize(DalamudPluginInterface pluginInterface)
-    {
+    public Plugin(DalamudPluginInterface pluginInterface, ChatGui chat, Framework framework, CommandManager commands, SigScanner sigScanner)
+	  {
       this.pluginInterface = pluginInterface;
-      chat = pluginInterface.Framework.Gui.Chat;
+      this.chat = chat;
+      this.framework = framework;
+      this.sigScanner = sigScanner;
 
-      config = (Configuration)this.pluginInterface.GetPluginConfig() ?? new Configuration();
+      config = this.pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       config.Initialize(this.pluginInterface);
 
       // this.ui = new PluginUI();
       // this.pluginInterface.UiBuilder.OnBuildUi += this.ui.Draw;
 
-      pluginInterface.Framework.OnUpdateEvent += Update;
+      framework.Update += Update;
 
-      commandManager = new PluginCommandManager<Plugin>(this, this.pluginInterface);
+      commandManager = new PluginCommandManager<Plugin>(this, commands);
 
       InitializePointers();
     }
 
-    private void Update(Dalamud.Game.Internal.Framework framework)
+    private void Update(Dalamud.Game.Framework framework)
     {
       if (!this.config.enabled) return;
 
@@ -79,7 +86,7 @@ namespace FateAutoSync
       // FATE pointer (thanks to Pohky#8008)
       try
       {
-        var sig = pluginInterface.TargetModuleScanner.ScanText("80 3D ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 48 8B 42 20");
+        var sig = sigScanner.ScanText("80 3D ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 48 8B 42 20");
         inFateAreaPtr = sig + Marshal.ReadInt32(sig, 2) + 7;
         chat.Print("Retrieved 'inFateAreaPtr' successfully");
         chat.Print(inFateAreaPtr.ToString("X8"));
@@ -92,9 +99,9 @@ namespace FateAutoSync
       // for ExecuteCommand
       try
       {
-        var getUIModulePtr = pluginInterface.TargetModuleScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
-        var easierProcessChatBoxPtr = pluginInterface.TargetModuleScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
-        var uiModulePtr = pluginInterface.TargetModuleScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
+        var getUIModulePtr = sigScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
+        var easierProcessChatBoxPtr = sigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
+        var uiModulePtr = sigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
 
         var GetUIModule = Marshal.GetDelegateForFunctionPointer<GetUIModuleDelegate>(getUIModulePtr);
 
@@ -106,7 +113,6 @@ namespace FateAutoSync
 
     public void ExecuteCommand(string command)
     {
-      var chat = this.pluginInterface.Framework.Gui.Chat;
       try
       {
         var bytes = System.Text.Encoding.UTF8.GetBytes(command);
@@ -140,7 +146,7 @@ namespace FateAutoSync
 
       // this.pluginInterface.UiBuilder.OnBuildUi -= this.ui.Draw;
 
-      this.pluginInterface.Framework.OnUpdateEvent -= Update;
+      framework.Update -= Update;
 
       this.pluginInterface.Dispose();
     }
