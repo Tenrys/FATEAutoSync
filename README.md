@@ -12,5 +12,4 @@ Maybe this is overkill, since I hear it can be done with Triggernometry most lik
 
 ## Screenshot
 
-![](https://tenrys.moe/ShareX/2021/Apr/BPsg.png)
-
+![](https://user-images.githubusercontent.com/3979239/149154647-893be983-0b55-4a1a-b618-49efa6dd7a4d.png)
